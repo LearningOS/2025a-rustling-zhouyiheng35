@@ -2,11 +2,10 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
-use std::vec::*;
+// 移除了未使用的导入 use std::vec::*;
 
 #[derive(Debug)]
 struct Node<T> {
@@ -69,15 +68,45 @@ impl<T> LinkedList<T> {
             },
         }
     }
-	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
-	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+    
+    // 为 merge 方法添加必要的 trait 约束
+    pub fn merge(list_a: LinkedList<T>, list_b: LinkedList<T>) -> Self 
+    where
+        T: PartialOrd + Clone,
+    {
+        let mut merged_list = LinkedList::new();
+        let mut current_a = list_a.start;
+        let mut current_b = list_b.start;
+
+        while let (Some(ptr_a), Some(ptr_b)) = (current_a, current_b) {
+            let value_a = unsafe { &(*ptr_a.as_ptr()).val };
+            let value_b = unsafe { &(*ptr_b.as_ptr()).val };
+            
+            // 现在 T 实现了 PartialOrd，可以进行 <= 比较
+            if value_a <= value_b {
+                merged_list.add(value_a.clone());
+                current_a = unsafe { (*ptr_a.as_ptr()).next };
+            } else {
+                merged_list.add(value_b.clone());
+                current_b = unsafe { (*ptr_b.as_ptr()).next };
+            }
         }
-	}
+
+        // 处理剩余的节点
+        while let Some(ptr) = current_a {
+            let value = unsafe { &(*ptr.as_ptr()).val };
+            merged_list.add(value.clone());
+            current_a = unsafe { (*ptr.as_ptr()).next };
+        }
+
+        while let Some(ptr) = current_b {
+            let value = unsafe { &(*ptr.as_ptr()).val };
+            merged_list.add(value.clone());
+            current_b = unsafe { (*ptr.as_ptr()).next };
+        }
+
+        merged_list
+    }
 }
 
 impl<T> Display for LinkedList<T>
